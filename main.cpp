@@ -117,14 +117,6 @@ int main() {
 		}
 
 		window.clear(sf::Color::White);
-		if (vec_line.size() >= 2) {
-			auto it0 = vec_line.begin();
-			auto it1 = vec_line.begin();
-			++it1;
-			for (; it1 != vec_line.end(); std::advance(it0, 2), std::advance(it1, 2)) {
-				drawLine(it0->first, it0->second, it1->first, it1->second, window);
-			}
-		}
 
 		if (vec_points.size() >= 2) {
 			auto it0 = vec_points.begin();
@@ -134,7 +126,16 @@ int main() {
 				drawLineGreen(it0->first, it0->second, it1->first, it1->second, window);
 			}
 		}
-
+		if (vec_line.size() >= 2) {
+			auto it0 = vec_line.begin();
+			auto it1 = vec_line.begin();
+			++it1;
+			for (int i = 0; it1 != vec_line.end(); ++it1, ++it0, ++i) { //std::advance(it0), std::advance(it1, 2)) {
+				if (i % 2 == 0) {
+					drawLineGreen(it0->first, it0->second, it1->first, it1->second, window);
+				}
+			}
+		}
 		window.display();
 	}
 	return 0;
