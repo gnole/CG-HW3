@@ -34,10 +34,10 @@ void drawLineGreen(int x1, int y1, int x2, int y2, sf::RenderWindow &window) {
 	const int signX = x1 < x2 ? 1 : -1;
 	const int signY = y1 < y2 ? 1 : -1;
 	int error = deltaX - deltaY;
-	sf::Vertex point(sf::Vector2f(x2, y2), sf::Color::Green);
+	sf::Vertex point(sf::Vector2f(x2, y2), sf::Color::Red);
 	window.draw(&point, 1, sf::Points);
 	while (x1 != x2 || y1 != y2) {
-		sf::Vertex point1(sf::Vector2f(x1, y1), sf::Color::Green);
+		sf::Vertex point1(sf::Vector2f(x1, y1), sf::Color::Red);
 		window.draw(&point1, 1, sf::Points);
 		int error2 = error * 2;
 		if (error2 > -deltaY) {
@@ -84,11 +84,129 @@ void drawCircle(int x0, int y0, int radius, sf::RenderWindow &window) {
 	window.display();
 }
 
+int dot(std::pair<int, int> p0, std::pair<int, int> p1) {
+	return p0.first * p1.first + p0.second * p1.second;
+}
+
+// Function to calculate the max from a vector of floats
+float max(std::vector<float> t) {
+	float maximum = -1000000;
+	for (int i = 0; i < t.size(); i++)
+		if (t[i] > maximum)
+			maximum = t[i];
+	return maximum;
+}
+
+// Function to calculate the min from a vector of floats
+float min(std::vector<float> t) {
+	float minimum = 1000000;
+	for (int i = 0; i < t.size(); i++)
+		if (t[i] < minimum)
+			minimum = t[i];
+	return minimum;
+}
+
+// Cyrus Beck function, returns a pair of values
+// that are then displayed as a line
+void cyrusBeck(std::vector<std::pair<int, int>> vertices,
+	std::vector<std::pair<int, int>> line, std::vector<std::pair<int, int>> &vec_line_cb) {
+	const int n = vertices.size();
+	// Temporary holder value that will be returned
+	std::pair<int, int> *newPair = new std::pair<int, int>[2];
+
+	// Normals initialized dynamically(can do it statically also, doesn't matter)
+	std::pair<int, int> *normal = new std::pair<int, int>[n];
+
+	// Calculating the normals
+	for (int i = 0; i < n; i++) {
+		normal[i].second = vertices[(i + 1) % n].first - vertices[i].first;
+		normal[i].first = vertices[i].second - vertices[(i + 1) % n].second;
+	}
+
+	// Calculating P1 - P0
+	std::pair<int, int> P1_P0 = std::make_pair(line[1].first - line[0].first,
+		line[1].second - line[0].second);
+
+	// Initializing all values of P0 - PEi
+	std::pair<int, int> *P0_PEi = new std::pair<int, int>[n];
+
+	// Calculating the values of P0 - PEi for all edges
+	for (int i = 0; i < n; i++) {
+
+		// Calculating PEi - P0, so that the
+		// denominator won't have to multiply by -1
+		P0_PEi[i].first = vertices[i].first - line[0].first;
+
+		// while calculating 't'
+		P0_PEi[i].second = vertices[i].second - line[0].second;
+	}
+
+	int *numerator = new int[n], *denominator = new int[n];
+
+	// Calculating the numerator and denominators
+	// using the dot function
+	for (int i = 0; i < n; i++) {
+		numerator[i] = dot(normal[i], P0_PEi[i]);
+		denominator[i] = dot(normal[i], P1_P0);
+	}
+
+	// Initializing the 't' values dynamically
+	float *t = new float[n];
+
+	// Making two vectors called 't entering'
+	// and 't leaving' to group the 't's
+	// according to their denominators
+	std::vector<float> tE, tL;
+
+	// Calculating 't' and grouping them accordingly
+	for (int i = 0; i < n; i++) {
+
+		t[i] = (float)(numerator[i]) / (float)(denominator[i]);
+
+		if (denominator[i] > 0)
+			tE.push_back(t[i]);
+		else
+			tL.push_back(t[i]);
+	}
+
+	// Initializing the final two values of 't'
+	float temp[2];
+
+	// Taking the max of all 'tE' and 0, so pushing 0
+	tE.push_back(0.f);
+	temp[0] = max(tE);
+
+	// Taking the min of all 'tL' and 1, so pushing 1
+	tL.push_back(1.f);
+	temp[1] = min(tL);
+
+	// Entering 't' value cannot be
+	// greater than exiting 't' value,
+	// hence, this is the case when the line
+	// is completely outside
+	if (temp[0] > temp[1]) {
+		newPair[0] = std::make_pair(-1, -1);
+		newPair[1] = std::make_pair(-1, -1);
+		vec_line_cb.push_back(std::make_pair(newPair[0].first, newPair[0].second));
+		vec_line_cb.push_back(std::make_pair(newPair[1].first, newPair[1].second));
+	} else {
+
+		// Calculating the coordinates in terms of x and y
+		newPair[0].first = (float)line[0].first + (float)P1_P0.first * (float)temp[0];
+		newPair[0].second = (float)line[0].second + (float)P1_P0.second * (float)temp[0];
+		newPair[1].first = (float)line[0].first + (float)P1_P0.first * (float)temp[1];
+		newPair[1].second = (float)line[0].second + (float)P1_P0.second * (float)temp[1];
+	}
+	vec_line_cb.push_back(std::make_pair(newPair[0].first, newPair[0].second));
+	vec_line_cb.push_back(std::make_pair(newPair[1].first, newPair[1].second));
+}
+
 int main() {
-	sf::RenderWindow window(sf::VideoMode(640, 480), "HW3");
+	sf::RenderWindow window(sf::VideoMode(740, 680), "HW3");
 	window.setFramerateLimit(50);
 	std::vector<std::pair<int, int>> vec_points;
 	std::vector<std::pair<int, int>> vec_line;
+	std::vector<std::pair<int, int>> vec_line_cb;
 	bool dr = false;
 	while (window.isOpen()) {
 
@@ -102,7 +220,7 @@ int main() {
 			case sf::Event::MouseButtonPressed: {
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 					if (dr) {
-						vec_line.push_back(std::make_pair(event.mouseButton.x, event.mouseButton.y));
+						vec_line.insert(vec_line.begin(), 1, std::make_pair(event.mouseButton.x, event.mouseButton.y));
 					} else {
 						vec_points.push_back(std::make_pair(event.mouseButton.x, event.mouseButton.y));
 					}
@@ -127,14 +245,15 @@ int main() {
 			}
 		}
 		if (vec_line.size() >= 2) {
-			auto it0 = vec_line.begin();
-			auto it1 = vec_line.begin();
+			cyrusBeck(vec_points, vec_line, vec_line_cb);
+			auto it0 = vec_line_cb.begin();
+			auto it1 = vec_line_cb.begin();
 			++it1;
-			for (int i = 0; it1 != vec_line.end(); ++it1, ++it0, ++i) { //std::advance(it0), std::advance(it1, 2)) {
-				if (i % 2 == 0) {
-					drawLineGreen(it0->first, it0->second, it1->first, it1->second, window);
-				}
-			}
+			//			for (int i = 0; it1 != vec_line_cb.end(); ++it1, ++it0, ++i) {
+			//				if (i % 2 == 0) {
+			//					drawLineGreen(it0->first, it0->second, it1->first, it1->second, window);
+			//				}
+			//			}
 		}
 		window.display();
 	}
