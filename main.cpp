@@ -4,31 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-void drawLine(int x1, int y1, int x2, int y2, sf::RenderWindow &window) {
-	const int deltaX = abs(x2 - x1);
-	const int deltaY = abs(y2 - y1);
-	const int signX = x1 < x2 ? 1 : -1;
-	const int signY = y1 < y2 ? 1 : -1;
-	int error = deltaX - deltaY;
-	sf::Vertex point(sf::Vector2f(x2, y2), sf::Color::Black);
-	window.draw(&point, 1, sf::Points);
-	while (x1 != x2 || y1 != y2) {
-		sf::Vertex point1(sf::Vector2f(x1, y1), sf::Color::Black);
-		window.draw(&point1, 1, sf::Points);
-		int error2 = error * 2;
-		if (error2 > -deltaY) {
-			error -= deltaY;
-			x1 += signX;
-		}
-		if (error2 < deltaX) {
-			error += deltaX;
-			y1 += signY;
-		}
-	}
-	window.display();
-}
-
-void drawLineGreen(int x1, int y1, int x2, int y2, sf::RenderWindow &window) {
+void drawLineRed(int x1, int y1, int x2, int y2, sf::RenderWindow &window) {
 	const int deltaX = abs(x2 - x1);
 	const int deltaY = abs(y2 - y1);
 	const int signX = x1 < x2 ? 1 : -1;
@@ -49,39 +25,6 @@ void drawLineGreen(int x1, int y1, int x2, int y2, sf::RenderWindow &window) {
 			y1 += signY;
 		}
 	}
-}
-
-void drawCircle(int x0, int y0, int radius, sf::RenderWindow &window) {
-	int x = 0;
-	int y = radius;
-	int delta = 1 - 2 * radius;
-	int error = 0;
-	while (y >= 0) {
-		sf::Vertex point(sf::Vector2f(x0 + x, y0 + y), sf::Color::Black);
-		sf::Vertex point1(sf::Vector2f(x0 + x, y0 - y), sf::Color::Red);
-		sf::Vertex point2(sf::Vector2f(x0 - x, y0 + y), sf::Color::Green);
-		sf::Vertex point3(sf::Vector2f(x0 - x, y0 - y), sf::Color::Blue);
-		window.draw(&point, 1, sf::Points);
-		window.draw(&point1, 1, sf::Points);
-		window.draw(&point2, 1, sf::Points);
-		window.draw(&point3, 1, sf::Points);
-		error = 2 * (delta + y) - 1;
-		if (delta < 0 && error <= 0) {
-			++x;
-			delta += 2 * x + 1;
-			continue;
-		}
-		error = 2 * (delta - x) - 1;
-		if (delta > 0 && error > 0) {
-			--y;
-			delta += 1 - 2 * y;
-			continue;
-		}
-		++x;
-		delta += 2 * (x - y);
-		--y;
-	}
-	window.display();
 }
 
 int dot(std::pair<int, int> p0, std::pair<int, int> p1) {
@@ -142,9 +85,7 @@ void cyrusBeck(std::vector<std::pair<int, int>> vertices,
 		else
 			tL.push_back(t[i]);
 	}
-
 	float temp[2];
-
 	tE.push_back(0.f);
 	temp[0] = max(tE);
 	tL.push_back(1.f);
@@ -156,7 +97,6 @@ void cyrusBeck(std::vector<std::pair<int, int>> vertices,
 		vec_line_cb.push_back(std::make_pair(newPair[0].first, newPair[0].second));
 		vec_line_cb.push_back(std::make_pair(newPair[1].first, newPair[1].second));
 	} else {
-
 		newPair[0].first = (float)line[0].first + (float)P1_P0.first * (float)temp[0];
 		newPair[0].second = (float)line[0].second + (float)P1_P0.second * (float)temp[0];
 		newPair[1].first = (float)line[0].first + (float)P1_P0.first * (float)temp[1];
@@ -198,15 +138,13 @@ int main() {
 			}
 			}
 		}
-
 		window.clear(sf::Color::White);
-
 		if (vec_points.size() >= 2) {
 			auto it0 = vec_points.begin();
 			auto it1 = vec_points.begin();
 			++it1;
 			for (; it1 != vec_points.end(); ++it0, ++it1) {
-				drawLineGreen(it0->first, it0->second, it1->first, it1->second, window);
+				drawLineRed(it0->first, it0->second, it1->first, it1->second, window);
 			}
 		}
 		if (vec_line.size() >= 2) {
@@ -218,7 +156,7 @@ int main() {
 			++it1;
 			for (int i = 0; it1 != vec_line_cb.end(); ++it1, ++it0, ++i) {
 				if (i % 2 == 0) {
-					drawLineGreen(it0->first, it0->second, it1->first, it1->second, window);
+					drawLineRed(it0->first, it0->second, it1->first, it1->second, window);
 				}
 			}
 		}
